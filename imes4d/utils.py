@@ -31,11 +31,12 @@ def slices_to_npz(glob_pattern: str, out_file: str, compressed: bool=True):
         np.savez(out_file.replace('"', '').replace("'", ''), images_coll)
 
 
-def create_dummy_data(shape=(256, 256, 256), trans=np.eye(4)):
+def create_dummy_data(shape=(128, 128, 128), solid='sphere', trans=np.eye(4)):
     """
     Creates two 3D arrays with a shifted cube as dummy data. Raises TypeError if shape is not correct.
 
     :param shape: shape of creating dummy data (tuple of ints)
+    :param solid: string describing solid (either 'sphere' or 'cube')
     :param trans: shift between dummy data (real or tuple)
     :return: (a, b, trans) tuple containing both volumes a and b and the 4x4 transformation matrix as numpy array
     """
@@ -47,11 +48,19 @@ def create_dummy_data(shape=(256, 256, 256), trans=np.eye(4)):
 
     for i in shape:
         assert isinstance(i, int)
-    a = np.zeros((128, 128, 128), dtype=np.float32)
 
-    start = np.array(list(map(lambda x: int(np.floor(x / 4)), shape)), dtype=np.int)
-    end = np.array(list(map(lambda x: int(np.floor(3*x / 4)), shape)), dtype=np.int)
-    a[start[0]:end[0], start[1]:end[1], start[2]:end[2]] = np.ones(end - start)
+    if solid == 'cube':
+        a = np.zeros(shape, dtype=np.float32)
+        start = np.array(list(map(lambda x: int(np.floor(x / 4)), shape)), dtype=int)
+        end = np.array(list(map(lambda x: int(np.floor(3*x / 4)), shape)), dtype=int)
+        a[start[0]:end[0], start[1]:end[1], start[2]:end[2]] = 1.0
+    elif solid == 'sphere':
+        center = (shape[0] // 2, shape[1] // 2, shape[2] // 2)
+        radius = shape[0] / 4
+        def sphere(i, j, k):
+            return 1 if (i - center[0])**2 + (j - center[1])**2 + (k - center[2])**2 < radius**2 else 0
+        a = np.fromfunction(np.vectorize(sphere), shape=shape, dtype=np.float32)
+        # print(a[int(radius / 2), ::int(radius / 2), ::int(radius / 2)])
 
     b = affine_transform(a, np.linalg.inv(trans))
 

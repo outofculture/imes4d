@@ -11,15 +11,40 @@ class ImesTest(unittest.TestCase):
     """Unittests for imes4d"""
 
     def test_pyr_lk_3d(self):
-        shift = np.random.rand(3)-0.5 * 20
+        shift = (np.random.rand(3)-0.5) * 40
         trans = np.eye(4)
         trans[:3, 3] = shift
-        a, b = create_dummy_data((128, 128, 128), trans=trans)
+        a, b = create_dummy_data((64, 64, 64), 'cube', trans=trans)
 
         prev_pts = PyrLK3D.harris_corner_3d(a)
-
         lk = PyrLK3D(a, b, prev_pts)
         flow, _, _ = lk.calc_flow()
+        print(f"shift{shift}, flow{np.mean(flow, axis=0)}")
+
+        for i, feature in enumerate(prev_pts):
+            dest = (int(feature[0] + flow[i][0]), int(feature[1] + flow[i][1]), int(feature[2] + flow[i][2]))
+            feature = (int(feature[0]), int(feature[1]), int(feature[2]))
+            a_s = ""
+            b_s = ""
+            a_reg = a[feature[0]-2:feature[0]+3, feature[1]-2:feature[1]+3, feature[2]-2:feature[2]+3]
+            b_reg = b[dest[0]-2:dest[0]+3, dest[1]-2:dest[1]+3, dest[2]-2:dest[2]+3]
+            if (set(a_reg.shape) | set(b_reg.shape)) != {5}:
+                # print(f"skipping {feature} -> {dest}")
+                continue
+            for y in range(5):
+                for z in range(5):
+                    for x in range(5):
+                        a_s += "o" if a_reg[z, y, x] > 0 else "·"
+                        b_s += "o" if b_reg[z, y, x] > 0 else "·"
+                    a_s += "\t"
+                    b_s += "\t"
+                a_s += "\n"
+                b_s += "\n"
+            # print(feature)
+            # print(a_s)
+            # print(dest)
+            # print(b_s)
+            # print("-" * 32)
 
         self.assertLess(np.linalg.norm(shift - np.mean(flow, axis=0)), 5e-2)
 
