@@ -64,8 +64,7 @@ class PyrLK3D:
         it = [self._maxIter] * len(prev_pts)
 
         for i, (pPt, nPt) in enumerate(zip(prev_pts, next_pts)):
-            flow[i], err[i], it[i] = self._calc_flow_pt(pPt, nPt, prev_vol, next_vol,
-                                                        self._winSize, self._eps, self._maxIter, i == 0)
+            flow[i], err[i], it[i] = self._calc_flow_pt(pPt, nPt, prev_vol, next_vol, self._winSize, self._eps, self._maxIter)
 
         return flow, err, it
 
