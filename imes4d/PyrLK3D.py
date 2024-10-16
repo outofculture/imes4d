@@ -65,7 +65,7 @@ class PyrLK3D:
 
         for i, (pPt, nPt) in enumerate(zip(prev_pts, next_pts)):
             flow[i], err[i], it[i] = self._calc_flow_pt(pPt, nPt, prev_vol, next_vol,
-                                                        self._winSize, self._eps, self._maxIter)
+                                                        self._winSize, self._eps, self._maxIter, i == 0)
 
         return flow, err, it
 
@@ -126,10 +126,10 @@ class PyrLK3D:
             nabla_next = np.array([vx.flatten(), vy.flatten(), vz.flatten()]).T
 
             # calculate Jacobian of warp (identity for translations)
-            jacobi = np.eye(3, dtype=np.float32)
+            # jacobi = np.eye(3, dtype=np.float32)
 
             # calculate steepest descent image
-            steepest = np.matmul(nabla_next, jacobi)
+            steepest = nabla_next  # np.matmul(nabla_next, jacobi)
 
             # calculate hessian approximation
             hessian = np.matmul(steepest.T, steepest)
@@ -196,7 +196,7 @@ class PyrLK3D:
         return vx, vy, vz, vt
 
     @staticmethod
-    @jit(float32[:, :, :](float32[:, :, :], int32, float32, float32))
+    # @jit(float32[:, :, :](float32[:, :, :], int32, float32, float32))
     def harris_corner_3d(volume, min_distance=10, threshold=0.1, eps=1e-6):
         """Finds corners in volume by extending harris corner detection to 3D.
         Special thanks to scikit-image!"""

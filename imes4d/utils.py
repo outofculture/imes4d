@@ -394,4 +394,4 @@ def _calc_new_bounds(shape, trans, total=True):
 
     new_shape = tuple([int(i) for i in new_shape])
 
-    return new_bounds[:, :3].astype(np.int), new_shape
+    return new_bounds[:, :3].astype(int), new_shape
